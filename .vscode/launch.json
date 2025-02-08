@@ -1,0 +1,54 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug STM32",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/app.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",           
+            "servertype": "openocd",
+            "configFiles": [
+                "${workspaceFolder}/scripts/stlink-dap.cfg",
+                "${workspaceFolder}/scripts/openocd_target.cfg",
+            ],
+            "svdFile": "${workspaceFolder}/scripts/STM32F407ZGTX.svd",
+            "preLaunchTask": "make"
+        },
+
+        {
+                "name": "Cortex Debug-jlink",
+                "cwd": "${workspaceFolder}",
+                "executable": "${workspaceFolder}/build/app.elf",
+                "request": "launch",
+                "type": "cortex-debug",
+                "servertype": "jlink",
+                "device": "STM32F407ZE",
+                "interface": "swd",
+                "runToEntryPoint": "main",
+                "showDevDebugTimestamps": true,
+                "svdFile": "${workspaceFolder}/scripts/STM32F407ZGTX.svd",
+                "preLaunchTask": "make"
+        },
+
+        {
+            "name": "Cortex Debug GD32",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/app.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "configFiles": [
+                "${workspaceFolder}/scripts/cmsis-dap.cfg",
+                "${workspaceFolder}/scripts/openocd_target.cfg",
+            ],
+            "svdFile": "${workspaceFolder}/scripts/STM32F407ZGTX.svd",
+            "preLaunchTask": "make"
+        },
+    ]
+}
