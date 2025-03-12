@@ -20,6 +20,7 @@
                 "-DDEVICE_TYPE=STM32F407ZGTX",
                 "-DBOOT=ON",
                 // "-DRELEASE=ON",
+                "-DFREERTOS=ON",
                 "-DBOARD_TYPE=BOARD_TEST"  
             ],
             "dependsOn": [

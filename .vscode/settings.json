@@ -3,6 +3,12 @@
         "stm32f4xx_conf.h": "c",
         "stm32f4xx_usart.h": "c",
         "mcu.h": "c",
-        "arm_math.h": "c"
+        "arm_math.h": "c",
+        "compare": "cpp",
+        "cstdint": "cpp",
+        "task.h": "c",
+        "timers.h": "c",
+        "semphr.h": "c",
+        "freertosconfig.h": "c"
     }
 }

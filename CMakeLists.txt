@@ -26,6 +26,8 @@ set(CMAKE_ASM_FLAGS "${MCU_FLAGS} -x assembler-with-cpp")
 
 option(BOOT "build for boot!" OFF)
 option(RELEASE "build for release!" OFF)
+option(FREERTOS "FreeRTOS support" OFF)
+
 
 if(RELEASE)
     message("build for release!")
@@ -42,6 +44,13 @@ if(BOOT)
     add_definitions(-DBOOT)
 else()
     message("build for app!")
+endif()
+
+if(FREERTOS)
+    message("FreeRTOS support!")
+    add_definitions(-DFREERTOS)
+else()
+    message("FreeRTOS support not!")
 endif()
 
 if(${DEVICE_TYPE} MATCHES "STM32") 

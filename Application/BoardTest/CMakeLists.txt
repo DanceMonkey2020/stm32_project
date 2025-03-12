@@ -25,7 +25,6 @@ include_directories(
     ./Include
 )
 
-
 aux_source_directory(./Source SRC_LIST)
 
 

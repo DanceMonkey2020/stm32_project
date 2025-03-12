@@ -2,8 +2,10 @@
 include_directories(    
     ./CMSIS/Include
     ./CMSIS/Device/ST/STM32F4xx/Include
-    ./FW/STM32F4xx_StdPeriph_Driver/inc   
-    ./Include
+    ./FW/STM32F4xx_StdPeriph_Driver/inc 
+    ./FreeRTOS-Kernel
+    ./FreeRTOS-Kernel/include
+    ./FreeRTOS-Kernel/portable/GCC/ARM_CM4F
 )
 
 #添加源文件
@@ -42,6 +44,21 @@ file(GLOB FW_LIST
 )
 endif()
 
+if(${FREERTOS})
+file(GLOB FREERTOS_LIST 
+    ./FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
+    ./FreeRTOS-Kernel/portable/MemMang/heap_4.c
+    ./FreeRTOS-Kernel/croutine.c
+    ./FreeRTOS-Kernel/event_groups.c
+    ./FreeRTOS-Kernel/list.c
+    ./FreeRTOS-Kernel/queue.c
+    ./FreeRTOS-Kernel/stream_buffer.c
+    ./FreeRTOS-Kernel/tasks.c
+    ./FreeRTOS-Kernel/timers.c
+)
+endif()
+
+
 #设置启动文件变量
 if(${DEVICE_TYPE} MATCHES "STM32F407ZGTX") 
 set(START_UP_ASM ./CMSIS/Device/ST/STM32F4xx/Source/Templates/GNU/startup_stm32f407zgtx.s)
@@ -58,6 +75,7 @@ add_library(platform STATIC
     ${START_UP_ASM}
     ${SRC_LIST}
     ${FW_LIST}
+    ${FREERTOS_LIST}
 )
 
 #设置库输出的名称
