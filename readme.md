@@ -28,6 +28,10 @@
 
 安装过程略
 
+需要安装的插件 
+- **Cortex-Debug**  ARM Cortex-M GDB Debugger support for VSCode
+- **C/C++** C/C++ for Visual Studio Code
+
 ### 安装GCC
 交叉编译工具是一种用于在一种平台上编译代码，以便在另一种平台上运行的工具。它们特别适用于嵌入式系统开发，因为开发环境通常与目标硬件平台不同。
 
@@ -142,8 +146,10 @@ PROJECT
 │   └── CMSIS           # Cortex-M微控制器软件接口标准
 │   └── CMakeLists.txt  # 平台库的CMake配置文件生成libxxxx.a文件
 ├── Application         # 应用代码，包含主程序和其他应用逻辑
-│   └── main.c          # 主函数，程序的入口点
-│   └── CMakeLists.txt  # 应用的CMake配置文件生成elf文件，链接libxxxx.a文件，生成hex和bin文件
+│   └── CMakeLists.txt  # BSP目录
+│   └── BoardTest       # 各个板级
+│        └── main.c          # 主函数，程序的入口点
+│        └── CMakeLists.txt  # 应用的CMake配置文件生成elf文件，链接libxxxx.a文件，生成hex和bin文件
 ├── scripts             # 脚本，包含构建和调试所需的配置文件
 │   ├── STM32F407ZGTX.ld  # 链接脚本，定义了内存布局和链接规则
 │   ├── STM32F407ZGTX.svd # 寄存器描述文件，提供外设寄存器的定义
@@ -166,52 +172,77 @@ PROJECT
  PROJECT/CMakeLists.txt，指定编译工具，交叉编译配置，定义工程名称，指定编译工具，指定静态库目录，和应用执行目录。  通过DEVICE_TYPE指定设备类型，添加宏定义。
  
  ```
+# 设置 CMake 最低支持版本
+cmake_minimum_required(VERSION 3.17)
 
- #设置 CMake 最低支持版本
- cmake_minimum_required(VERSION 3.17)
+# Cmake 交叉编译配置
+set(CMAKE_SYSTEM_NAME Generic)
 
- #Cmake 交叉编译配置
- set(CMAKE_SYSTEM_NAME Generic)
+# 定义工程名称
+project("demo")
 
- #定义工程名称
- project("demo")
+# 指定编译工具
+set(CMAKE_C_COMPILER "arm-none-eabi-gcc")
+set(CMAKE_CXX_COMPILER "arm-none-eabi-g++")
+set(CMAKE_ASM_COMPILER "arm-none-eabi-gcc")
+set(CMAKE_AR "arm-none-eabi-ar")
+set(CMAKE_OBJCOPY "arm-none-eabi-objcopy")
+set(CMAKE_OBJDUMP "arm-none-eabi-objdump")
+set(CMAKE_SIZE "arm-none-eabi-size")
 
- #指定编译工具
- set(CMAKE_C_COMPILER "arm-none-eabi-gcc")
- set(CMAKE_CXX_COMPILER "arm-none-eabi-g++")
- set(CMAKE_ASM_COMPILER "arm-none-eabi-gcc")
- set(CMAKE_AR "arm-none-eabi-ar")
- set(CMAKE_OBJCOPY "arm-none-eabi-objcopy")
- set(CMAKE_OBJDUMP "arm-none-eabi-objdump")
- set(CMAKE_SIZE "arm-none-eabi-size")
+# 编译相关选项
+set(MCU_FLAGS "-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16")
+set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -Og")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
+set(CMAKE_C_FLAGS "${MCU_FLAGS}  -Wall -Wno-unknown-pragmas -Wl,-u,_printf_float") #-w -Wall
+set(CMAKE_ASM_FLAGS "${MCU_FLAGS} -x assembler-with-cpp")
 
- #编译相关选项
- set(MCU_FLAGS "-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16")
- set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -Og")
- set(CMAKE_C_FLAGS_RELEASE "-O3")
- set(CMAKE_C_FLAGS "${MCU_FLAGS}  -Wall -Wno-unknown-pragmas -Wl,-u,_printf_float") #-w -Wall
- set(CMAKE_ASM_FLAGS "${MCU_FLAGS} -x assembler-with-cpp")
 
- if(${DEVICE_TYPE} MATCHES "STM32") 
-     add_definitions(-DSTM32)
- endif()
+option(BOOT "build for boot!" OFF)
+option(RELEASE "build for release!" OFF)
 
- if(${DEVICE_TYPE} MATCHES "STM32F4") 
-     add_definitions(-DSTM32F4)
- endif()
+if(RELEASE)
+    message("build for release!")
+    set(CMAKE_BUILD_TYPE "Release")
+    add_definitions(-DRELEASE)
+else()
+    message("build for debug!")
+    set(CMAKE_BUILD_TYPE "Debug")
+    add_definitions(-DDEBUG)
+endif()
 
- if(${DEVICE_TYPE} MATCHES "STM32F40|STM32F41") 
-     add_definitions(-DSTM32F40_41xxx)
- endif()
+if(BOOT)
+    message("build for boot!")
+    add_definitions(-DBOOT)
+else()
+    message("build for app!")
+endif()
 
- if(${DEVICE_TYPE} MATCHES "STM32F407ZGTX") 
-     add_definitions(-DSTM32F407ZGTX) 
- endif()
+if(${DEVICE_TYPE} MATCHES "STM32") 
+    add_definitions(-DSTM32)
+endif()
 
- add_definitions(-DUSE_STDPERIPH_DRIVER)
+if(${DEVICE_TYPE} MATCHES "STM32F4") 
+    add_definitions(-DSTM32F4)
+    add_definitions(-DARM_MATH_CM4)
 
- add_subdirectory(Platform) #平台库
- add_subdirectory(Application) #应用
+endif()
+
+if(${DEVICE_TYPE} MATCHES "STM32F40|STM32F41") 
+    add_definitions(-DSTM32F40_41xxx)
+endif()
+
+if(${DEVICE_TYPE} MATCHES "STM32F407ZGTX") 
+    add_definitions(-DSTM32F407ZGTX) 
+endif()
+
+add_definitions(-DUSE_STDPERIPH_DRIVER)
+
+add_subdirectory(Platform) #平台库
+add_subdirectory(Application) #应用
+
+
+
 
  ```
 
@@ -220,103 +251,147 @@ PROJECT
  Platform/CMakeLists.txt，指定启动文件，添加ASM支持，设置启动文件C属性，生成库目标platform，设置库输出的名称，设置库文件的默认输出路径。
  
  ```
+#添加头文件搜索路径
+include_directories(    
+    ./CMSIS/Include
+    ./CMSIS/Device/ST/STM32F4xx/Include
+    ./FW/STM32F4xx_StdPeriph_Driver/inc   
+    ./Include
+)
 
- #添加头文件搜索路径
- include_directories(    
-     ./CMSIS/Include
-     ./CMSIS/Device/ST/STM32F4xx/Include
-     ./FW/STM32F4xx_StdPeriph_Driver/inc   
-     ./Include
- )
+#添加源文件
+aux_source_directory(./CMSIS/Device/ST/STM32F4xx/Source/Templates SRC_LIST)
 
- #添加源文件
- aux_source_directory(./CMSIS/Device/ST/STM32F4xx/Source/Templates SRC_LIST)
+#添加标准库源文件
+if(${DEVICE_TYPE} MATCHES "STM32F40|STM32F41")
 
- #添加标准库源文件
- if(${DEVICE_TYPE} MATCHES "STM32F40|STM32F41")
+file(GLOB FW_LIST 
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_crc.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dbgmcu.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dma.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_exti.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_flash.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_i2c.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_iwdg.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_pwr.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rtc.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_sdio.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c
+./FW/STM32F4xx_StdPeriph_Driver/src/misc.c   
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_cryp.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_hash.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rng.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_can.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dac.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dcmi.c
+./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fsmc.c
+)
+endif()
 
- file(GLOB FW_LIST 
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_crc.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dbgmcu.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dma.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_exti.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_flash.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_i2c.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_iwdg.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_pwr.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rcc.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rtc.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_sdio.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/misc.c   
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_cryp.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_hash.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rng.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_can.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dac.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dcmi.c
- ./FW/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fsmc.c
- )
- endif()
+#设置启动文件变量
+if(${DEVICE_TYPE} MATCHES "STM32F407ZGTX") 
+set(START_UP_ASM ./CMSIS/Device/ST/STM32F4xx/Source/Templates/GNU/startup_stm32f407zgtx.s)
+endif()
 
- #设置启动文件变量
- if(${DEVICE_TYPE} MATCHES "STM32F407ZGTX") 
- set(START_UP_ASM ./CMSIS/Device/ST/STM32F4xx/Source/Templates/GNU/startup_stm32f407zgtx.s)
- endif()
+#设置支持 ASM
+ENABLE_LANGUAGE(ASM)
 
- #设置支持 ASM
- ENABLE_LANGUAGE(ASM)
+#设置启动文件 C 属性
+set_property(SOURCE ${START_UP_ASM} PROPERTY LANGUAGE C)
 
- #设置启动文件 C 属性
- set_property(SOURCE ${START_UP_ASM} PROPERTY LANGUAGE C)
+#生成库目标 platform
+add_library(platform STATIC
+    ${START_UP_ASM}
+    ${SRC_LIST}
+    ${FW_LIST}
+)
 
- #生成库目标 platform
- add_library(platform STATIC
-     ${START_UP_ASM}
-     ${SRC_LIST}
-     ${FW_LIST}
- )
+#设置库输出的名称
+set_target_properties(platform PROPERTIES OUTPUT_NAME ${DEVICE_TYPE})
 
- #设置库输出的名称
- set_target_properties(platform PROPERTIES OUTPUT_NAME ${DEVICE_TYPE})
+#设置库文件的默认输出路径
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/lib)
 
- #设置库文件的默认输出路径
- set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/lib)
+ ```    
 
- ```     
+### BSP目录CMakeLists.txt
+
+通过tasks.json传入参数，检索BSP子目录
+
+```
+#添加头文件搜索路径
+include_directories(
+    ${PROJECT_SOURCE_DIR}/Platform/CMSIS/Include
+    ${PROJECT_SOURCE_DIR}/Platform/CMSIS/Device/ST/STM32F4xx/Include
+    ${PROJECT_SOURCE_DIR}/Platform/FW/STM32F4xx_StdPeriph_Driver/inc   
+    ${PROJECT_SOURCE_DIR}/Application
+)
+
+
+#测试
+if(${BOARD_TYPE} MATCHES "BOARD_TEST") 
+    add_definitions(-DBOARD_TEST)
+    message("build for BOARD_TEST!")
+    add_subdirectory(BoardTest)
+endif()
+```
+
 
 ### 可执行CMakeLists.txt
 
  Application/CMakeLists.txt，指定链接脚本，设置链接选项，生成目标文件，确保可执行文件依赖于动态库，把目标文件与库文件进行链接，设置可执行文件输出路径，设置 ELF 转换路径，添加自定义命令实现 ELF 转换 hex 和 bin 文件。
 
 ```
+set(VERSION_MAJOR "1")
+set(VERSION_MINOR "0")
+set(VERSION_PATCH "0")
+
+#APP
+# v1.0.0 首次添加
+
+
+set(BOOT_VERSION_MAJOR "1")
+set(BOOT_VERSION_MINOR "0")
+set(BOOT_VERSION_PATCH "0")
+
+#BOOT
+# v1.0.0 首次添加
+
+add_definitions(-DVERSION_MAJOR=${VERSION_MAJOR})
+add_definitions(-DVERSION_MINOR=${VERSION_MINOR})
+add_definitions(-DVERSION_PATCH=${VERSION_PATCH})
+add_definitions(-DBOOT_VERSION_MAJOR=${BOOT_VERSION_MAJOR})
+add_definitions(-DBOOT_VERSION_MINOR=${BOOT_VERSION_MINOR})
+add_definitions(-DBOOT_VERSION_PATCH=${BOOT_VERSION_PATCH})
 
 #添加头文件搜索路径
 include_directories(
-    ${PROJECT_SOURCE_DIR}/Platform/CMSIS/Include
-    ${PROJECT_SOURCE_DIR}/Platform/CMSIS/Device/ST/STM32F4xx/Include
-    ${PROJECT_SOURCE_DIR}/Platform/FW/STM32F4xx_StdPeriph_Driver/inc   
-    ${PROJECT_SOURCE_DIR}/Application  
-    ./Include 
+    ./Include
 )
 
-#添加源文件
+
 aux_source_directory(./Source SRC_LIST)
+
 
 #添加非标准的共享库搜索路径
 link_directories(${PROJECT_SOURCE_DIR}/build/lib)
+link_directories(${PROJECT_SOURCE_DIR}/Platform/CMSIS/Lib/GCC)
 
-#设置链接脚本
-set(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/scripts/${DEVICE_TYPE}.ld)
+if(${BOOT})
+        set(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/scripts/${DEVICE_TYPE}_BOOT.ld)
+else()
+        set(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/scripts/${DEVICE_TYPE}.ld)
+endif()
 
 #设置链接选项
-set(CMAKE_EXE_LINKER_FLAGS "--specs=nano.specs -specs=nosys.specs -T${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${DEVICE_TYPE}.map,--cref -Wl,--gc-sections")
+set(CMAKE_EXE_LINKER_FLAGS " -specs=rdimon.specs --specs=nano.specs -specs=nosys.specs -T${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${DEVICE_TYPE}.map,--cref -Wl,--gc-sections")
 
 #生成目标文件
 add_executable(${DEVICE_TYPE}.elf main.c ${SRC_LIST})
@@ -324,10 +399,19 @@ add_executable(${DEVICE_TYPE}.elf main.c ${SRC_LIST})
 # 确保可执行文件依赖于动态库
 add_dependencies(${DEVICE_TYPE}.elf platform)
 
-#把目标文件与库文件进行链接
-target_link_libraries(${DEVICE_TYPE}.elf 
-${DEVICE_TYPE}
-)
+if(${BOOT})
+    #把目标文件与库文件进行链接
+    target_link_libraries(${DEVICE_TYPE}.elf 
+    ${DEVICE_TYPE}
+    arm_cortexM4lf_math
+    )
+else()
+    #把目标文件与库文件进行链接
+    target_link_libraries(${DEVICE_TYPE}.elf 
+    ${DEVICE_TYPE}
+    arm_cortexM4lf_math
+    )
+endif()
 
 #设置可执行文件输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
@@ -337,15 +421,30 @@ set(ELF_FILE ${PROJECT_BINARY_DIR}/${DEVICE_TYPE}.elf)
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${DEVICE_TYPE}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${DEVICE_TYPE}.bin)
 
-#添加自定义命令实现 ELF 转换 hex 和 bin 文件
-add_custom_command(TARGET "${DEVICE_TYPE}.elf" POST_BUILD
-COMMAND ${CMAKE_OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
-COMMAND ${CMAKE_OBJCOPY} -Oihex ${ELF_FILE} ${HEX_FILE}
-COMMENT "Building ${PROJECT_NAME}.bin and ${PROJECT_NAME}.hex"
-COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.bin"
-COMMAND ${CMAKE_COMMAND} -E copy ${ELF_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.elf"
-COMMAND ${CMAKE_SIZE} --format=berkeley ${ELF_FILE} ${HEX_FILE}
-COMMENT "Invoking: Cross ARM GNU Print Size")
+
+if(${BOOT})
+    #添加自定义命令实现 ELF 转换 hex 和 bin 文件
+    add_custom_command(TARGET "${DEVICE_TYPE}.elf" POST_BUILD   
+    COMMAND ${CMAKE_OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
+    COMMAND ${CMAKE_OBJCOPY} -Oihex ${ELF_FILE} ${HEX_FILE}
+    COMMENT "Building ${PROJECT_NAME}.bin and ${PROJECT_NAME}.hex"
+    COMMAND ${CMAKE_COMMAND} -E copy ${HEX_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}_Boot_V${BOOT_VERSION_MAJOR}.${BOOT_VERSION_MINOR}.${BOOT_VERSION_PATCH}.hex"
+    COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}_Boot_V${BOOT_VERSION_MAJOR}.${BOOT_VERSION_MINOR}.${BOOT_VERSION_PATCH}.bin"
+    COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.bin"
+    COMMAND ${CMAKE_COMMAND} -E copy ${ELF_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.elf"
+    COMMAND ${CMAKE_SIZE} --format=berkeley ${ELF_FILE} ${HEX_FILE}
+    COMMENT "Invoking: Cross ARM GNU Print Size")
+else()
+    #添加自定义命令实现 ELF 转换 hex 和 bin 文件
+    add_custom_command(TARGET "${DEVICE_TYPE}.elf" POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
+    COMMAND ${CMAKE_OBJCOPY} -Oihex ${ELF_FILE} ${HEX_FILE}
+    COMMENT "Building ${PROJECT_NAME}.bin and ${PROJECT_NAME}.hex"
+    COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.bin"
+    COMMAND ${CMAKE_COMMAND} -E copy ${ELF_FILE} "${PROJECT_BINARY_DIR}/bin/${PROJECT_NAME}.elf"
+    COMMAND ${CMAKE_SIZE} --format=berkeley ${ELF_FILE} ${HEX_FILE}
+    COMMENT "Invoking: Cross ARM GNU Print Size")
+endif()
 
 
 ```
@@ -374,7 +473,10 @@ VSCode 任务配置，包含清理、编译、下载等任务。
                 "-G",
                 "MinGW Makefiles",
                 "..",       
-                "-DDEVICE_TYPE=STM32F407ZGTX"            
+                "-DDEVICE_TYPE=STM32F407ZGTX",
+                // "-DBOOT=ON",
+                // "-DRELEASE=ON",
+                "-DBOARD_TYPE=BOARD_TEST"  
             ],
             "dependsOn": [
                 "clean",
@@ -384,8 +486,8 @@ VSCode 任务配置，包含清理、编译、下载等任务。
         {
             "label": "make",
             "type": "shell",
-            // "command": "make -j10",
-            "command": "make",
+            "command": "make -j10",
+            // "command": "make",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -402,23 +504,51 @@ VSCode 任务配置，包含清理、编译、下载等任务。
         },
         {
             "type": "shell",
-            "label": "download",
+            "label": "download boot",
             "command": "openocd",
             "args": [
-                // "-f",
-                // "../scripts/stlink-dap.cfg",
-                // "-f",
-                // "../scripts/openocd_target.cfg",
                 "-f",
-                "../scripts/cmsis-dap.cfg",
+                "../scripts/stlink-dap.cfg",
                 "-f",
                 "../scripts/openocd_target.cfg",
+                // "-f",
+                // "E:/project/scripts/cmsis-dap.cfg",
+                // "-f",
+                // "E:/project/scripts/openocd_target.cfg",
                 "-c",
                 "init",
                 "-c",
                 "halt",
                 "-c",
-                "program app.bin 0x8000000",
+                "program STM32F407ZGTX.bin 0x8000000",
+                "-c",
+                "reset",
+                "-c",
+                "shutdown"
+            ],
+            "group": "build",
+            "dependsOn": "make"
+        }
+        ,
+        {
+            "type": "shell",
+            "label": "download",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "../scripts/stlink-dap.cfg",
+                "-f",
+                "../scripts/openocd_target.cfg",
+                // "-f",
+                // "E:/project/scripts/cmsis-dap.cfg",
+                // "-f",
+                // "E:/project/scripts/openocd_target.cfg",
+                "-c",
+                "init",
+                "-c",
+                "halt",
+                "-c",
+                "program STM32F407ZGTX.bin 0x8020000",
                 "-c",
                 "reset",
                 "-c",
@@ -658,7 +788,11 @@ Invoking: Cross ARM GNU Print Size
 
 ## 仿真
 
-有点懒，写不动了。
+这里仿真器我选择的是 stlink
+
+选择运行与调试->Cortex Debug STM32 或者 ***F5*** 选择上次的仿真进行
+
+**使用仿真需要工程RELEASE改为DEBUG**
 
 ## 项目地址
 https://github.com/DanceMonkey2020/stm32_project.git

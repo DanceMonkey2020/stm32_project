@@ -18,7 +18,7 @@
                 "MinGW Makefiles",
                 "..",       
                 "-DDEVICE_TYPE=STM32F407ZGTX",
-                // "-DBOOT=ON",
+                "-DBOOT=ON",
                 // "-DRELEASE=ON",
                 "-DBOARD_TYPE=BOARD_TEST"  
             ],
@@ -30,8 +30,8 @@
         {
             "label": "make",
             "type": "shell",
-            "command": "make -j10",
-            // "command": "make",
+            // "command": "make -j10",
+            "command": "make",
             "group": {
                 "kind": "build",
                 "isDefault": true
