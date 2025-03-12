@@ -7,7 +7,7 @@
         {
             "name": "Cortex Debug STM32",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/app.elf",
+            "executable": "${workspaceFolder}/build/STM32F407ZGTX.elf",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",           
@@ -23,7 +23,7 @@
         {
                 "name": "Cortex Debug-jlink",
                 "cwd": "${workspaceFolder}",
-                "executable": "${workspaceFolder}/build/app.elf",
+                "executable": "${workspaceFolder}/build/STM32F407ZGTX.elf",
                 "request": "launch",
                 "type": "cortex-debug",
                 "servertype": "jlink",

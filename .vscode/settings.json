@@ -2,6 +2,7 @@
     "files.associations": {
         "stm32f4xx_conf.h": "c",
         "stm32f4xx_usart.h": "c",
-        "mcu.h": "c"
+        "mcu.h": "c",
+        "arm_math.h": "c"
     }
 }

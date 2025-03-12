@@ -17,7 +17,10 @@
                 "-G",
                 "MinGW Makefiles",
                 "..",       
-                "-DDEVICE_TYPE=STM32F407ZGTX"            
+                "-DDEVICE_TYPE=STM32F407ZGTX",
+                // "-DBOOT=ON",
+                // "-DRELEASE=ON",
+                "-DBOARD_TYPE=BOARD_TEST"  
             ],
             "dependsOn": [
                 "clean",
@@ -27,8 +30,8 @@
         {
             "label": "make",
             "type": "shell",
-            // "command": "make -j10",
-            "command": "make",
+            "command": "make -j10",
+            // "command": "make",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -45,23 +48,51 @@
         },
         {
             "type": "shell",
-            "label": "download",
+            "label": "download boot",
             "command": "openocd",
             "args": [
-                // "-f",
-                // "../scripts/stlink-dap.cfg",
-                // "-f",
-                // "../scripts/openocd_target.cfg",
                 "-f",
-                "../scripts/cmsis-dap.cfg",
+                "../scripts/stlink-dap.cfg",
                 "-f",
                 "../scripts/openocd_target.cfg",
+                // "-f",
+                // "E:/project/scripts/cmsis-dap.cfg",
+                // "-f",
+                // "E:/project/scripts/openocd_target.cfg",
                 "-c",
                 "init",
                 "-c",
                 "halt",
                 "-c",
-                "program app.bin 0x8000000",
+                "program STM32F407ZGTX.bin 0x8000000",
+                "-c",
+                "reset",
+                "-c",
+                "shutdown"
+            ],
+            "group": "build",
+            "dependsOn": "make"
+        }
+        ,
+        {
+            "type": "shell",
+            "label": "download",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "../scripts/stlink-dap.cfg",
+                "-f",
+                "../scripts/openocd_target.cfg",
+                // "-f",
+                // "E:/project/scripts/cmsis-dap.cfg",
+                // "-f",
+                // "E:/project/scripts/openocd_target.cfg",
+                "-c",
+                "init",
+                "-c",
+                "halt",
+                "-c",
+                "program STM32F407ZGTX.bin 0x8020000",
                 "-c",
                 "reset",
                 "-c",

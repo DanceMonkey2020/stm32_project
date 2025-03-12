@@ -5,20 +5,20 @@
             "includePath": [
                 "${workspaceFolder}/Platform/CMSIS/Include",
                 "${workspaceFolder}/Platform/CMSIS/Device/ST/STM32F4xx/Include",
-                "${workspaceFolder}/Platform/FW/STM32F4xx_StdPeriph_Driver/inc",               
-                "${workspaceFolder}/Application"       
+                "${workspaceFolder}/Platform/FW/STM32F4xx_StdPeriph_Driver/inc",
+                "${workspaceFolder}/Application",
+                "${workspaceFolder}/Application/BoardTest/Include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
+                "BOOT",
                 "STM32",
                 "STM32F4",
-                "STM32F40_41xxx",         
-                "USE_STDPERIPH_DRIVER"              
+                "STM32F40_41xxx",
+                "USE_STDPERIPH_DRIVER"
             ],
-         
-  
             "compilerPath": "E://tools//mingw64//bin//gcc.exe",
             "cStandard": "c11",
             "cppStandard": "gnu++14",
