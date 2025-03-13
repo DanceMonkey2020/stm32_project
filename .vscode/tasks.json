@@ -13,21 +13,21 @@
             "label": "cmake",
             "type": "shell",
             "command": "cmake",
-            "args": [ 
+            "args": [
                 "-G",
                 "MinGW Makefiles",
-                "..",       
+                "..",
                 "-DDEVICE_TYPE=STM32F407ZGTX",
                 "-DBOOT=ON",
-                // "-DRELEASE=ON",
                 "-DFREERTOS=ON",
-                "-DBOARD_TYPE=BOARD_TEST"  
+                "-DRELEASE=ON",
+                "-DBOARD_TYPE=BOARD_DEMO",
+                // "-DBOARD_TYPE=BOARD_RTOS_DEMO",
             ],
             "dependsOn": [
                 "clean",
             ]
         },
-
         {
             "label": "make",
             "type": "shell",
@@ -73,8 +73,7 @@
             ],
             "group": "build",
             "dependsOn": "make"
-        }
-        ,
+        },
         {
             "type": "shell",
             "label": "download",
@@ -102,6 +101,5 @@
             "group": "build",
             "dependsOn": "make"
         }
-
     ]
 }

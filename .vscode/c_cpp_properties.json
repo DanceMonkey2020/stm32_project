@@ -12,7 +12,9 @@
                 "${workspaceFolder}/Platform/FreeRTOS-Kernel",
 
                 "${workspaceFolder}/Application",
-                "${workspaceFolder}/Application/BoardTest/Include"
+                "${workspaceFolder}/Application/BoardDemo/Include",
+                "${workspaceFolder}/Application/BoardRtosDemo/Include"
+
             ],
             "defines": [
                 "_DEBUG",

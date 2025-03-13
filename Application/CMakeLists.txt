@@ -10,9 +10,16 @@ include_directories(
 )
 
 
-#测试
-if(${BOARD_TYPE} MATCHES "BOARD_TEST") 
-    add_definitions(-DBOARD_TEST)
-    message("build for BOARD_TEST!")
-    add_subdirectory(BoardTest)
+#裸跑
+if(${BOARD_TYPE} MATCHES "BOARD_DEMO") 
+    add_definitions(-DBOARD_DEMO)
+    message("build for BOARD_DEMO!")
+    add_subdirectory(BoardDemo)
+endif()
+
+#FreeRTOS
+if(${BOARD_TYPE} MATCHES "BOARD_RTOS_DEMO") 
+    add_definitions(-DBOARD_RTOS_DEMO)
+    message("build for BOARD_RTOS_DEMO!")
+    add_subdirectory(BoardRTOSDemo)
 endif()
